@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Example</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.5/signalr.min.js"></script>
+</head>
+<body>
+    <div id="image-container" style="background-color:black"></div>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/mainHub")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        connection.on("ReceiveLiveStream", function (base64) {
+            $("#image-container").empty();
+            // Create an <img> tag and set its src attribute to the received Base64 string
+            const imgElement = document.createElement("img");
+            imgElement.src = "data:image/png;base64," + base64; // Assuming the image is PNG format
+            document.getElementById("image-container").appendChild(imgElement);
+        });
+
+        connection.start()
+            .then(() => console.log("Connection started"))
+            .catch(err => console.error("Error starting connection:", err));
+    </script>
+</body>
+</html>
