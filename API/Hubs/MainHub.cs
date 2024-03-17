@@ -8,7 +8,7 @@ namespace API.Hubs;
 public class MainHub : Hub
 {
     private readonly ILogger<MainHub> _logger;
-    public MainHub(iMainService iMainService, ILogger<MainHub> logger)
+    public MainHub(ILogger<MainHub> logger)
     {
         _logger = logger;
     }
