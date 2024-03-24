@@ -14,7 +14,7 @@ public class Program
         builder.Services.AddControllersWithViews();
         builder.Services.AddSignalR(o =>
         {
-            o.MaximumReceiveMessageSize = 999999; //increase sending packet limit for base64 strings
+            o.MaximumReceiveMessageSize = 9999999; //increase sending packet limit for base64 strings
             o.EnableDetailedErrors = true;
         });
         

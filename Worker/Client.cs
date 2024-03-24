@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -28,5 +30,16 @@ public class Client
             isConnected= true;
         }
         await connection.InvokeAsync("ReceiveStream", base64);
+    }
+
+    public async Task AudioTransferAsync(string data)
+    {
+        if (!isConnected)
+        {
+            await connection.StartAsync();
+            isConnected = true;
+        }
+        
+        await connection.InvokeAsync("ReceiveAudioStream", data);
     }
 }

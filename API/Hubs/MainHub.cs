@@ -1,6 +1,6 @@
+using System.Buffers.Text;
 using System.Diagnostics;
 using API.Controllers;
-using API.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace API.Hubs;
@@ -17,5 +17,11 @@ public class MainHub : Hub
     {
         Debug.WriteLine($"Received: {base64}");
         await Clients.All.SendAsync("ReceiveLiveStream", base64); // Broadcast received base64 to all clients
+    }
+
+    public async Task ReceiveAudioStream(string audioData)
+    {
+        Debug.WriteLine($"Received: {audioData}");
+        await Clients.All.SendAsync("ReceiveAudioStream", audioData);
     }
 }
