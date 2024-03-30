@@ -16,7 +16,7 @@ public class MainHub : Hub
     public async Task ReceiveStream(string base64)
     {
         Debug.WriteLine($"Received: {base64}");
-        await Clients.All.SendAsync("ReceiveLiveStream", base64); // Broadcast received base64 to all clients
+        await Clients.All.SendAsync("ReceiveLiveStream", base64); // base64 to all clients
     }
 
     public async Task ReceiveAudioStream(string audioData)

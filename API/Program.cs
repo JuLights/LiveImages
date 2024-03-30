@@ -9,6 +9,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
+        builder.Services.AddCors();
 
         builder.Services.AddControllers();
         builder.Services.AddControllersWithViews();
@@ -23,6 +24,14 @@ public class Program
         builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
+
+        app.UseCors(builder =>
+        {
+            builder
+                .AllowAnyOrigin() // You can specify origins instead of allowing any origin
+                .AllowAnyMethod() // You can specify allowed HTTP methods
+                .AllowAnyHeader(); // You can specify allowed headers
+        });
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

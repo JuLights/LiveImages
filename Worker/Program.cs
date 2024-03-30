@@ -17,63 +17,43 @@ namespace Worker
     {
         public static int count = 0;
         private static Client _client;
-        private static Stopwatch _watch = new Stopwatch();
+        private static Thread _audioTh;
+        private static Thread _videoTh;
+
 
         static void Main(string[] args)
         {
             //_WorkerTh = new Thread(MainWorker);
             _client = new Client();
-            //CameraRecorder();
-            AudioRecorder();
-            //Thread.Sleep(1500);
-            //_WorkerTh.Start();
+
+            Thread.Sleep(5000);
+
+            _videoTh = new Thread(CameraRecorder);
+            _audioTh = new Thread(AudioRecorder);
+            _audioTh.Start();
+            _videoTh.Start();
         }
 
         public static void AudioRecorder()
         {
-
             //byte[] buffer = null;
             using (var audioCapture = new WaveInEvent())
             {
-                var byteArr = new byte[5120000];
-                audioCapture.WaveFormat = new WaveFormat(44100, 16, 1); // Mono, 44.1 kHz, 16-bit
+                //byte [] byteArr;
+                audioCapture.WaveFormat = new WaveFormat(44100, 16, 2); // Mono, 44.1 kHz, 16-bit
                 int i = 0;
+                audioCapture.BufferMilliseconds = 100; //decrease/increase for audio responsivness :)
+
                 audioCapture.DataAvailable += async (s, e) =>
                 {
                     byte[] buffer = new byte[e.BytesRecorded];
-                    //Debug.WriteLine(buffer[0]);
-                    Buffer.BlockCopy(e.Buffer, 0, byteArr, i*buffer.Length, e.BytesRecorded);
-                    Console.WriteLine(i*buffer.Length);
-                    i++;
-                    if (_watch.ElapsedMilliseconds > 10000)
-                    {
-                        i = 0;
-                        if (buffer != null)
-                        {
-                            //using(var strm = new MemoryStream())
-                            //using (var writer = new WaveFileWriter(strm, audioCapture.WaveFormat))
-                            //{
-                            //    writer.Write(byteArr);
-                            //    string base64Audio = Convert.ToBase64String(strm.ToArray());
-                            //    _client.AudioTransferAsync(base64Audio).GetAwaiter().GetResult();
-                            //}
-
-                            var arr = SaveAudioWithInterval(byteArr); //properly write wav file to memory Stream
-                            string base64Audio = Convert.ToBase64String(arr);
-                            _client.AudioTransferAsync(base64Audio).GetAwaiter().GetResult();
-                        }
-                        Console.WriteLine(_watch.ElapsedMilliseconds);
-                        Console.WriteLine($"Sent size: {buffer.Length}");
-                        Console.WriteLine($"BytesRecorded: {e.BytesRecorded}");
-                        _watch.Reset();
-                        _watch.Start();
-                    }
+                    Buffer.BlockCopy(e.Buffer, 0, buffer, 0, e.BytesRecorded);
+                    var arr = SaveAudioInMemoryStream(buffer); //properly write wav file to memory Stream
+                    string base64Audio = Convert.ToBase64String(arr);
+                    _client.AudioTransferAsync(base64Audio).GetAwaiter().GetResult();
                 };
 
                 audioCapture.StartRecording();
-                _watch.Start();
-
-
 
                 Console.WriteLine("Streaming audio to server. Press any key to stop.");
                 Console.ReadKey();
@@ -83,6 +63,7 @@ namespace Worker
             Thread.Sleep(1);
 
         }
+
         public static int cnt = 0;
         //public static MemoryStream memStream;
 
@@ -95,7 +76,7 @@ namespace Worker
             short bitsPerSample = 16; // 16-bit PCM
 
             // Calculate the size of the audio data chunk
-            int dataSize = 100 * data.Length;
+            int dataSize = 100 * data.Length * channels;
 
             // Calculate the size of the entire file
             int fileSize = 36 + dataSize; // 36 bytes for the WAV header
@@ -133,12 +114,14 @@ namespace Worker
         {
             
             // Define WAV file format parameters
-            short channels = 1; // Mono
+            //short channels = 1; // Mono 1, stereo 2
+            short channels = 2; // Mono 1, stereo 2
             int sampleRate = 44100; // 44.1 kHz
             short bitsPerSample = 16; // 16-bit PCM
 
             // Calculate the size of the audio data chunk
-            int dataSize = 1000 * data.Length;
+            //int dataSize = 100 * data.Length;
+            int dataSize = 100 * data.Length * channels; //for stereo
 
             // Calculate the size of the entire file
             int fileSize = 36 + dataSize; // 36 bytes for the WAV header

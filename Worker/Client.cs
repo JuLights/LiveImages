@@ -25,10 +25,10 @@ public class Client
 
     public async Task ConnectAsync(string base64)
     {
-        if(!isConnected){
-            await connection.StartAsync();
-            isConnected= true;
-        }
+        //if(!isConnected){
+        //    await connection.StartAsync();
+        //    isConnected= true;
+        //}
         await connection.InvokeAsync("ReceiveStream", base64);
     }
 
@@ -39,7 +39,14 @@ public class Client
             await connection.StartAsync();
             isConnected = true;
         }
-        
+
+        //var buff = Convert.FromBase64String(data);
+
+        //foreach (var item in buff)
+        //{
+        //    Console.Write(item);
+        //}
+
         await connection.InvokeAsync("ReceiveAudioStream", data);
     }
 }

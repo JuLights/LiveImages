@@ -10,6 +10,11 @@
     <div id="image-container" style="background-color:black"></div>
 
     <script>
+        const audioContext = new AudioContext({
+            numChannels: 2,
+            latencyHint: "interactive",
+            sampleRate: 44100
+        });
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/mainHub")
@@ -17,44 +22,42 @@
             .build();
 
         connection.start()
-            .then(() => console.log("Connection started"))
+            .then(() => {
+                document.querySelector('button').addEventListener('click', function () {
+                    audioContext.resume().then(() => {
+                        console.log('Playback resumed successfully');
+                    });
+                });
+                console.log("Connection started")
+            })
             .catch(err => console.error("Error starting connection:", err));
 
         connection.on("ReceiveLiveStream", async function (base64) {
+            console.log(base64);
             $("#image-container").empty();
-            // Create an <img> tag and set its src attribute to the received Base64 string
+            // src attribute to the received Base64 string
             const imgElement = document.createElement("img");
-            imgElement.src = "data:image/png;base64," + base64; // Assuming the image is PNG format
+            imgElement.src = "data:image/png;base64," + base64; // PNG format
             document.getElementById("image-container").appendChild(imgElement);
         });
 
-        connection.on("ReceiveAudioStream", (audioData) => {
-
+        connection.on("ReceiveAudioStream", function (audioData) {
+            
             var buffer = base64ToArrayBuffer(audioData);
-            const audioFloat32Array = new Float32Array(buffer);
-            // console.log(audioData.length);
+            // console.log(buffer);
 
-            var audioContext = new AudioContext();
 
-            document.querySelector('button').addEventListener('click', function () {
-                audioContext.resume().then(() => {
-                    console.log('Playback resumed successfully');
-                });
+
+            // const audioFloat32Array = new Float32Array(buffer);
+
+            audioContext.decodeAudioData(buffer, function (decodedData) {
+                // decodedData contains the audio data, you can use it to play audio or process further
+                const source = audioContext.createBufferSource();
+                source.buffer = decodedData;
+                source.connect(audioContext.destination);
+                source.start(0);
             });
-
-            const audioBuffer = audioContext.createBuffer(1, audioFloat32Array.length, 44100); // Mono, 44.1 kHz
-            // console.log(audioFloat32Array.length);
-            audioBuffer.copyToChannel(audioFloat32Array, 0);
-            // Fill audio buffer with received audio data
-            audioBuffer.getChannelData(0).set(audioFloat32Array);
-            // console.log(audioBuffer.getChannelData(0));
-            // console.log(audioBuffer.getChannelData(1));
-
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContext.destination);
-            source.start();
-            // Process and play audio data received from the server
+            
         });
 
 
@@ -65,27 +68,6 @@
                 bytes[i] = binaryString.charCodeAt(i);
             }
             return bytes.buffer;
-        }
-
-        function base64ToFloat32Array(base64) {
-            // Decode base64 to binary string
-            var binaryString = atob(base64);
-
-            // Create ArrayBuffer to hold the binary data
-            var buffer = new ArrayBuffer(binaryString.length);
-
-            // Create a typed array to represent the binary data
-            var bytes = new Uint8Array(buffer);
-
-            // Fill the typed array with binary data from the base64 string
-            for (var i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-
-            // Interpret the binary data as Float32Array
-            var floatArray = new Float32Array(buffer);
-
-            return floatArray;
         }
 
 
